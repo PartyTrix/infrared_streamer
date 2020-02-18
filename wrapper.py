@@ -1,13 +1,28 @@
 from pypylon import pylon
 from pypylon import genicam
 import time
+import face_alignment as fa
+import cv2
+
+
 
 try:
+
     imageWindow = pylon.PylonImageWindow()
     imageWindow.Create(1)
     # Create an instant camera object with the camera device found first.
     camera = pylon.InstantCamera(pylon.TlFactory.GetInstance().CreateFirstDevice())
-
+    camera.Open()
+    # Load the predefined camera settings
+    pylon.FeaturePersistence.Load("settings.txt", camera.GetNodeMap())
+    
+    converter = pylon.ImageFormatConverter()
+    
+    # converting to opencv bgr format
+    converter.OutputPixelFormat = pylon.PixelType_BGR8packed
+    converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+    
+    
     # Print the model name of the camera.
     print("Using device ", camera.GetDeviceInfo().GetModelName())
 
@@ -15,13 +30,17 @@ try:
     # The camera device is parameterized with a default configuration which
     # sets up free-running continuous acquisition.
     camera.StartGrabbingMax(10000, pylon.GrabStrategy_LatestImageOnly)
-
+    fa = fa.FaceAlignment(fa.LandmarksType._2D, face_detector='sfd')
     while camera.IsGrabbing():
         # Wait for an image and then retrieve it. A timeout of 5000 ms is used.
         grabResult = camera.RetrieveResult(5000, pylon.TimeoutHandling_ThrowException)
 
         # Image grabbed successfully?
         if grabResult.GrabSucceeded():
+            image = converter.Convert(grabResult) 
+            img = image.GetArray()[]
+            
+            masked_face, rgb_vals = gr.get_roi(frame, fa)
             imageWindow.SetImage(grabResult)
             imageWindow.Show()
         else:
